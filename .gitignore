@@ -1,0 +1,7 @@
+# Folder Containerlab creates when the lab runs
+clab-netmedic/
+.netmedic.clab.yml.bak
+*.bak
+__pycache__/
+.venv/
+.env
