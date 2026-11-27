@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>NetMedic demo app</title></head>
+<body>
+  <h1>NetMedic demo app</h1>
+  <p id="status">Checking the api...</p>
+  <script>
+    fetch("/api/status").then(r => r.json()).then(s => {
+      document.getElementById("status").textContent =
+        "Hello " + s.client + ", served by pod " + s.pod;
+    });
+  </script>
+</body>
+</html>
