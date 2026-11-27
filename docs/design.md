@@ -54,3 +54,6 @@ Why I made each choice in the network lab. One or two lines each.
 - **Lab management network (172.30.30.0/24):** Containerlab gives every device a separate out-of-band connection; monitoring and automation use it, so they still work when the main network is broken. VLAN 99 is the in-band management VLAN.
 - **Demo app goes in the Servers VLAN (10.1.20.0/24) at HQ:** it's an internal service, which is what VLAN 20 is for.
 - **All configs in Git:** Phase 6 restores a router by pushing its known-good config from here.
+
+## Phase 2 decisions
+- **Kubernetes node routes only the 3 site prefixes, not all of 10.0.0.0/8:** WSL's DNS server is at 10.255.255.254. A 10.0.0.0/8 route sent DNS lookups into the lab, so the node couldn't pull images. Narrowing the route fixed it.

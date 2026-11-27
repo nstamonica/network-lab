@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: netmedic
+resources:
+  - namespace.yaml
+  - api.yaml
+  - web.yaml
+configMapGenerator:
+  - name: api-code
+    files: [api/app.py]
+  - name: web-config
+    files: [web/default.conf]
+  - name: web-html
+    files: [web/index.html]
