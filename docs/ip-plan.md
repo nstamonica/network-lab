@@ -59,3 +59,24 @@ Containerlab's out-of-band network, used by Prometheus, Netmiko and Ansible. Pat
 | hq-pc1 | .13 | bra-pc1 | .23 | brb-pc1 | .33 |
 | hq-srv1 | .14 | bra-srv1 | .24 | brb-srv1 | .34 |
 | hq-guest1 | .15 | bra-guest1 | .25 | brb-guest1 | .35 |
+
+
+The kind node isn't on this network. It sits on Docker's own `kind` network (that's how it downloads images); monitoring will reach it through 10.1.20.20.
+
+## HQ demo app (Phase 2)
+
+| Device | Interface | IP | Notes |
+|---|---|---|---|
+| hq-k8s-control-plane | eth1 | 10.1.20.20/24 | kind node, HQ Servers VLAN, plugged into hq-sw1 eth5 |
+| App URL | | http://10.1.20.20:30080 | web service (NodePort 30080) |
+
+Servers in VLAN 20 count up from .10 (.10 = srv1, .20 = the cluster).
+
+Kubernetes' own ranges stay inside the cluster and are never routed on the lab network:
+
+| Range | Use |
+|---|---|
+| 10.244.0.0/16 | Pod IPs |
+| 10.96.0.0/16 | Service IPs |
+
+The cluster node routes only the 3 site blocks (10.1.0.0/16, 10.2.0.0/16, 10.3.0.0/16) via 10.1.20.1, not all of 10.0.0.0/8. WSL's DNS server is at 10.255.255.254, and a 10.0.0.0/8 route would send DNS lookups into the lab.

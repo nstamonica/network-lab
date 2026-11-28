@@ -4,6 +4,7 @@ A 3-site network (HQ, Branch A, Branch B) running in Containerlab with FRRouting
 
 - **Inside each site:** edge router + layer-3 switch, OSPF, VLANs 10 (users), 20 (servers), 30 (guest), 99 (management)
 - **Between sites:** eBGP, HQ is the hub
+- **Demo app:** web (nginx) + api (Python) on Kubernetes (kind) at HQ, 10.1.20.20
 - **Plan and reasons:** `docs/ip-plan.md`, `docs/design.md`, `diagrams/topology.md`
 
 ## Run it
@@ -17,6 +18,30 @@ sudo ./scripts/check_phase1.sh                  # Phase 1 test: 30 pings should 
 ```
 
 Stop it with `sudo containerlab destroy -t netmedic.clab.yml --cleanup`.
+
+## Demo app
+
+A small app runs on Kubernetes (kind) at HQ, so later phases can break the app and not just the network. `web` (nginx) passes `/api/` requests to `api` (Python, 2 replicas). Namespace: `netmedic`. Files: `app/`.
+
+The cluster node (`hq-k8s-control-plane`) is plugged into `hq-sw1` eth5, VLAN 20, at 10.1.20.20.
+
+The app is **not** redeployed automatically. After every `containerlab deploy`, run:
+
+~~~bash
+sudo docker exec hq-k8s-control-plane rm -rf /netmedic-app
+sudo docker cp app hq-k8s-control-plane:/netmedic-app
+sudo ./scripts/kubectl.sh apply -k /netmedic-app
+sudo ./scripts/kubectl.sh -n netmedic get pods   # wait until all are Running
+~~~
+
+Test it from a branch PC:
+
+~~~bash
+sudo docker exec clab-netmedic-bra-pc1 curl -s http://10.1.20.20:30080/api/status
+# expected: {"app": "netmedic-demo", "pod": "api-...", "client": "10.2.10.10"}
+~~~
+
+`client` should be the branch PC's real IP. That works because of `externalTrafficPolicy: Local`.
 
 ## Poke around
 
@@ -46,4 +71,5 @@ configs/common/        shared files (FRR daemons, VLAN setup script)
 scripts/               check scripts (later: chaos script)
 docs/                  IP plan and design decisions
 diagrams/              topology diagram
+app/                   demo app: Kubernetes files and api code
 ```

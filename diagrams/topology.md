@@ -1,4 +1,4 @@
-# Phase 1 Topology
+# Lab Topology (Phases 1-2)
 
 ```mermaid
 flowchart TB
@@ -8,10 +8,12 @@ flowchart TB
         hqpc1["hq-pc1<br/>VLAN 10 · 10.1.10.10"]
         hqsrv1["hq-srv1<br/>VLAN 20 · 10.1.20.10"]
         hqg1["hq-guest1<br/>VLAN 30 · 10.1.30.10"]
+        hqk8s["hq-k8s-control-plane<br/>kind node · VLAN 20 · 10.1.20.20<br/>demo app :30080"]
         hqr1 ---|"OSPF · 10.1.254.0/30"| hqsw1
         hqsw1 --- hqpc1
         hqsw1 --- hqsrv1
         hqsw1 --- hqg1
+        hqsw1 --- hqk8s
     end
 
     subgraph BRA["Branch A · 10.2.0.0/16 · AS 65002"]
@@ -42,4 +44,4 @@ flowchart TB
     hqr1 ===|"eBGP · 10.255.0.4/30"| brbr1
 ```
 
-Ports: edge routers use `eth1` for the LAN; HQ uses `eth2` (Branch A) and `eth3` (Branch B) for the WAN, branches use `eth2`. Switches use `eth1` uplink, `eth2` = VLAN 10, `eth3` = VLAN 20, `eth4` = VLAN 30. VLAN 99 has a gateway on each switch but no ports yet.
+Ports: edge routers use `eth1` for the LAN; HQ uses `eth2` (Branch A) and `eth3` (Branch B) for the WAN, branches use `eth2`. Switches use `eth1` uplink, `eth2` = VLAN 10, `eth3` = VLAN 20, `eth4` = VLAN 30. At HQ, `eth5` = VLAN 20 for the kind cluster (demo app). VLAN 99 has a gateway on each switch but no ports yet.

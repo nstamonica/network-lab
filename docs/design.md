@@ -52,8 +52,13 @@ Why I made each choice in the network lab. One or two lines each.
 - **Guest VLAN is built now, locked down later:** the "internet only" rule comes with the firewall phase.
 - **Loopbacks as router IDs:** a loopback never goes down with a cable, so the ID stays stable.
 - **Lab management network (172.30.30.0/24):** Containerlab gives every device a separate out-of-band connection; monitoring and automation use it, so they still work when the main network is broken. VLAN 99 is the in-band management VLAN.
-- **Demo app goes in the Servers VLAN (10.1.20.0/24) at HQ:** it's an internal service, which is what VLAN 20 is for.
 - **All configs in Git:** Phase 6 restores a router by pushing its known-good config from here.
 
 ## Phase 2 decisions
 - **Kubernetes node routes only the 3 site prefixes, not all of 10.0.0.0/8:** WSL's DNS server is at 10.255.255.254. A 10.0.0.0/8 route sent DNS lookups into the lab, so the node couldn't pull images. Narrowing the route fixed it.
+- **Demo app goes in the Servers VLAN (10.1.20.0/24) at HQ:** it's an internal service, which is what VLAN 20 is for.
+- **kind started by Containerlab:** saves a step, since Containerlab creates the cable to hq-sw1 eth5 instead of me wiring it by hand, and keeps the whole lab (network + cluster) in one file that starts and stops with one command.
+- **externalTrafficPolicy: Local:** keeps the visitor's real IP. Without it, Kubernetes swaps it for an internal cluster address, so /api/status couldn't prove a request came from Branch A or B, and later logs and firewall rules couldn't tell the sites apart. The trade-off is that traffic only goes to pods on the node it arrives at, which is fine with one node.
+- **2 api replicas + /health probes:** if one pod crashes, the other keeps serving, so users don't see an outage. The probes let Kubernetes spot a broken pod, stop sending it traffic and restart it. Those restarts are also what Phase 5 will look for to diagnose a crash loop.
+- **api uses only the Python standard library:** no packages to install, so it starts fast and there's nothing extra to break or patch. It only needs to return a little JSON.
+- **FAIL_MODE=crash hook:** Phase 4's chaos script needs a safe, repeatable way to crash the app on command. Flipping one setting is easier to trigger and undo than editing code.
